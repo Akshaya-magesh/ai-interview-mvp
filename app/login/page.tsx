@@ -9,11 +9,18 @@ export default function LoginPage() {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const origin = window.location.origin;
+
+    // Use deployed origin in prod, fall back to NEXT_PUBLIC_BASE_URL, then localhost
+    const origin =
+      (typeof window !== 'undefined' && window.location.origin) ||
+      process.env.NEXT_PUBLIC_BASE_URL ||
+      'http://localhost:3000';
+
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: `${origin}/auth/callback` }
+      options: { emailRedirectTo: `${origin}/auth/callback` },
     });
+
     if (error) {
       alert(error.message);
     } else {
