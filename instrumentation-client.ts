@@ -1,19 +1,34 @@
-// This file configures the initialization of Sentry on the client.
-// The added config here will be used whenever a users loads a page in their browser.
-// https://docs.sentry.io/platforms/javascript/guides/nextjs/
+'use client';
 
-import * as Sentry from "@sentry/nextjs";
+import * as Sentry from '@sentry/nextjs';
 
 Sentry.init({
-  dsn: "https://69a9c0aadd6e2acd30dbf2f18a1e2edd@o4510163089620992.ingest.de.sentry.io/4510163090079824",
+  // secure env-based DSN (no hardcoding)
+  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
-  // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
-  tracesSampleRate: 1,
-  // Enable logs to be sent to Sentry
+  // Controlled sampling (adjust via Vercel env vars)
+  tracesSampleRate: Number(process.env.SENTRY_TRACES_SAMPLE_RATE ?? 0.2),
+  profilesSampleRate: Number(process.env.SENTRY_PROFILES_SAMPLE_RATE ?? 0.1),
+  replaysSessionSampleRate: Number(process.env.SENTRY_REPLAYS_SESSION_SAMPLE_RATE ?? 0.1),
+  replaysOnErrorSampleRate: Number(process.env.SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE ?? 1),
+
+  environment: process.env.SENTRY_ENVIRONMENT ?? 'development',
   enableLogs: true,
-
-  // Setting this option to true will print useful information to the console while you're setting up Sentry.
   debug: false,
+
+  integrations: [
+    Sentry.browserTracingIntegration(),
+    Sentry.replayIntegration(),
+  ],
+
+  // Optional: scrub any sensitive info before sending
+  beforeSend(event) {
+    if (event.request?.headers?.authorization) {
+      delete event.request.headers.authorization;
+    }
+    return event;
+  },
 });
 
+// Optional router hook if you want page transition tracking
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;

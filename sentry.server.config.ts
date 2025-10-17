@@ -1,18 +1,17 @@
-// This file configures the initialization of Sentry on the server.
-// The config you add here will be used whenever the server handles a request.
-// https://docs.sentry.io/platforms/javascript/guides/nextjs/
-
+// sentry.server.config.ts
 import * as Sentry from "@sentry/nextjs";
 
 Sentry.init({
-  dsn: "https://69a9c0aadd6e2acd30dbf2f18a1e2edd@o4510163089620992.ingest.de.sentry.io/4510163090079824",
+  // Prefer private server DSN; fall back to public if needed
+  dsn: process.env.SENTRY_DSN ?? process.env.NEXT_PUBLIC_SENTRY_DSN,
 
-  // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
-  tracesSampleRate: 1,
+  // Sensible defaults (tune later in env)
+  tracesSampleRate: Number(process.env.SENTRY_TRACES_SAMPLE_RATE ?? 0.2),
+  profilesSampleRate: Number(process.env.SENTRY_PROFILES_SAMPLE_RATE ?? 0.1),
 
-  // Enable logs to be sent to Sentry
+  // Optional: crank up while debugging, turn down in prod
   enableLogs: true,
-
-  // Setting this option to true will print useful information to the console while you're setting up Sentry.
   debug: false,
+
+  environment: process.env.SENTRY_ENVIRONMENT ?? "development",
 });
